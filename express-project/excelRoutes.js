@@ -5,12 +5,31 @@ const fs = require('fs');
 const path = require('path');
 const exceljs = require('exceljs');
 const axios = require('axios');
-const lockfile = require('lockfile');
+const request = require('request');
+const urlencode = require('urlencode');
 
 // Константы
 const NUM_PARAM = '1986228881';
+const NUM_PARAM_Vlad = '1787894486';
+const NUM_PARAM_Admin = '304622290';
+const NUM_TG = ['1986228881', '1787894486', '304622290'];
 const newFolderPath = 'new';
 const oldFolderPath = 'old';
+
+// Получение
+function say(msg) {
+  if (msg !== undefined) {
+    NUM_TG.forEach((number) => {
+      setTimeout(() => sendtg(number, msg), 1500);
+    });
+  }
+}
+// Отправка сообщения в ТГ
+function sendtg(num, msg) {
+  const encodedMsg = urlencode.encode(msg);
+  const encodedNum = urlencode.encode(num);
+  request(`http://home.teyhd.ru:3334/?msg=${encodedMsg}&num=${encodedNum}`);
+}
 
 // Функция для проверки открытости файла
 const isFileLocked = (filePath) => {
@@ -333,6 +352,8 @@ router.post('/createExcel51', async function (req, res) {
       await axios.get(`http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=данные%20были%20добавлены`);
       console.log('Данные успешно вставлены после строки с значением 5.1.');
       res.send('Данные успешно вставлены');
+      const message = JSON.stringify(tableData);
+      say(message);
     } else {
       console.log('Строка с 5.1 не найдена.');
     }
@@ -655,6 +676,8 @@ router.post('/createExcel52', async function (req, res) {
       fs.renameSync(filePath, path.join(oldFolderPath, path.basename(filePath)));
       await workbook.xlsx.writeFile(newFilePath);
       await axios.get(`http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=данные%20были%20добавлены`);
+      const message = JSON.stringify(tableData);
+      say(message);
       console.log('Данные успешно вставлены после строки с значением 5.2.');
       res.send('Данные успешно вставлены');
     } else {
