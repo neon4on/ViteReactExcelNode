@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useCookies } from 'react-cookie';
+import M from 'materialize-css';
 
 const now = new Date();
 const expires = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
 
-const Form64 = () => {
+const Form64 = (props) => {
+  const { port, host } = props;
+
   const [cookies, setCookie] = useCookies(['tableData']);
   const [tableData, setTableData] = useState(
     () =>
@@ -26,6 +29,7 @@ const Form64 = () => {
   };
 
   useEffect(() => {
+    M.AutoInit();
     setTableData((prevTableData) => ({
       ...prevTableData,
       ...cookies.tableData,
@@ -34,13 +38,41 @@ const Form64 = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    for (const key in tableData) {
+      if (
+        e.target.elements[key] &&
+        e.target.elements[key].type === 'text' &&
+        typeof tableData[key] === 'string' &&
+        tableData[key].trim() !== '' &&
+        !/^\d*$/.test(tableData[key])
+      ) {
+        M.toast({
+          html: 'Пожалуйста, вводите только числа',
+          classes: '#ef5350 red lighten-1 rounded',
+        });
+        return;
+      }
+    }
     try {
       console.log('Отправляемые данные:', tableData);
-
-      const response = await axios.post('http://localhost:4000/api/createExcel64', tableData);
+      const response = await axios.post(`${host}${port}/api/createExcel64`, tableData);
       console.log('Ответ сервера:', response.data);
+      setTableData({
+        winner: '',
+        commandData1: '',
+      });
+      M.toast({ html: 'Данные успешно отправлены', classes: '#26a69a teal lighten-1 rounded' });
     } catch (error) {
+      M.toast({ html: 'Данные не были отправлены', classes: '#ef5350 red lighten-1 rounded' });
       console.error('Ошибка при отправке данных:', error);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    const { name, value } = e.target;
+    if (!/^\d*$/.test(value)) {
+      M.toast({ html: 'Пожалуйста, вводите только числа' });
+      e.preventDefault();
     }
   };
 
@@ -83,6 +115,7 @@ const Form64 = () => {
           id="commandData1"
           value={tableData.commandData1 || ''}
           onChange={handleChange}
+          onKeyPress={handleKeyPress}
         />
         <label htmlFor="commandData1">Количество</label>
         <div className="wrapper-button">

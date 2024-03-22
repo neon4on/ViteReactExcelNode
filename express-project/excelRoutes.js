@@ -25,23 +25,6 @@ const isFileLocked = (filePath) => {
   }
 };
 
-const checkLocksInFolder = () => {
-  const files = fs.readdirSync(newFolderPath);
-  files.forEach((file) => {
-    const filePath = path.join(newFolderPath, file);
-    try {
-      fs.renameSync(filePath, filePath);
-      console.log(`Файл ${filePath} не заблокирован.`);
-    } catch (error) {
-      if (error.code === 'EBUSY') {
-        console.log(`Файл ${filePath} заблокирован другим процессом.`);
-      } else {
-        console.error(`Ошибка при проверке файла ${filePath}:`, error);
-      }
-    }
-  });
-};
-
 // Форма под пунктом 5.1
 router.post('/createExcel51', async function (req, res) {
   const tableData = req.body;
@@ -120,7 +103,7 @@ router.post('/createExcel51', async function (req, res) {
         }
         j++;
       }
-      console.log(tableData);
+
       const newRow1Values = [
         '5.1.1',
         tableData.winner,

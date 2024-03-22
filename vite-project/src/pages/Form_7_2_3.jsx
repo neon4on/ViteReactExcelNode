@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useCookies } from 'react-cookie';
+import M from 'materialize-css';
 
 const now = new Date();
 const expires = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
 
-const Form723 = () => {
+const Form723 = (props) => {
+  const { port, host } = props;
+
   const [cookies, setCookie] = useCookies(['tableData']);
   const [tableData, setTableData] = useState(
     () =>
@@ -32,21 +35,57 @@ const Form723 = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    for (const key in tableData) {
+      if (
+        e.target.elements[key] &&
+        e.target.elements[key].type === 'text' &&
+        typeof tableData[key] === 'string' &&
+        tableData[key].trim() !== '' &&
+        !/^\d*$/.test(tableData[key])
+      ) {
+        M.toast({
+          html: 'Пожалуйста, вводите только числа',
+          classes: '#ef5350 red lighten-1 rounded',
+        });
+        return;
+      }
+    }
     try {
       console.log('Отправляемые данные:', tableData);
-      const response = await axios.post('http://localhost:4000/api/createExcel723', tableData);
+      const response = await axios.post(`${host}${port}/api/createExcel723`, tableData);
       console.log('Ответ сервера:', response.data);
+      setTableData({
+        winner: '',
+        commandData1: '',
+        commandData2: '',
+        commandData3: '',
+        personalData1: '',
+        personalData2: '',
+        personalData3: '',
+        lackOfCompetitiveComponentData: '',
+      });
+      M.toast({ html: 'Данные успешно отправлены', classes: '#26a69a teal lighten-1 rounded' });
     } catch (error) {
+      M.toast({ html: 'Данные не были отправлены', classes: '#ef5350 red lighten-1 rounded' });
       console.error('Ошибка при отправке данных:', error);
     }
   };
 
   useEffect(() => {
+    M.AutoInit();
     setTableData((prevTableData) => ({
       ...prevTableData,
       ...cookies.tableData,
     }));
   }, [cookies.tableData, setTableData]);
+
+  const handleKeyPress = (e) => {
+    const { name, value } = e.target;
+    if (!/^\d*$/.test(value)) {
+      M.toast({ html: 'Пожалуйста, вводите только числа' });
+      e.preventDefault();
+    }
+  };
 
   return (
     <div className="container">
@@ -79,6 +118,7 @@ const Form723 = () => {
                   name="commandData1"
                   value={tableData.commandData1 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -91,6 +131,7 @@ const Form723 = () => {
                   name="commandData2"
                   value={tableData.commandData2 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -103,6 +144,7 @@ const Form723 = () => {
                   name="commandData3"
                   value={tableData.commandData3 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -116,6 +158,7 @@ const Form723 = () => {
                   name="personalData1"
                   value={tableData.personalData1 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -128,6 +171,7 @@ const Form723 = () => {
                   name="personalData2"
                   value={tableData.personalData2 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -140,6 +184,7 @@ const Form723 = () => {
                   name="personalData3"
                   value={tableData.personalData3 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -153,6 +198,7 @@ const Form723 = () => {
                   name="lackOfCompetitiveComponentData"
                   value={tableData.lackOfCompetitiveComponentData || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
