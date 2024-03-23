@@ -20,6 +20,7 @@
     "lockfile": "^1.0.4",
     "mongoose": "^8.2.0",
     "request": "^2.88.2",
+    "uri-js": "^4.2.2",
     "urlencode": "^2.0.0",
     "xlsx-populate": "^1.21.0"
   },

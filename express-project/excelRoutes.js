@@ -10,11 +10,13 @@ const urlencode = require('urlencode');
 
 // Константы
 const NUM_PARAM = '1986228881';
-const NUM_PARAM_Vlad = '1787894486';
-const NUM_PARAM_Admin = '304622290';
-const NUM_TG = ['1986228881', '1787894486', '304622290'];
+const NUM_PARAM_Vlad = '304622290';
+const NUM_PARAM_Admin = '1787894486';
+const NUM_TG = [NUM_PARAM, NUM_PARAM_Vlad];
 const newFolderPath = 'new';
 const oldFolderPath = 'old';
+
+//
 
 // Получение
 function say(msg) {
@@ -44,6 +46,45 @@ const isFileLocked = (filePath) => {
     throw error;
   }
 };
+
+// Проверка на валидность данных
+function validValue(data, ColimnA) {
+  let regular = null;
+  if (data == '5.1') regular = /^5\.1\.\d+$/;
+  if (data == '5.2') regular = /^5\.2\.\d+$/;
+  const columnAValues = ColimnA;
+  let arrayNotSort = [];
+
+  // Собираем все номера в массив
+  columnAValues.forEach((value) => {
+    if (typeof value === 'string' && value.match(regular)) {
+      arrayNotSort.push(value);
+    }
+  });
+
+  // Сортируем массив
+  const arraySort = arrayNotSort.sort((a, b) => {
+    const numberA = parseInt(a.split('.')[2]);
+    const numberB = parseInt(b.split('.')[2]);
+    return numberA - numberB;
+  });
+
+  // Перебираем массив и проверяем последовательность номеров
+  for (let i = 0; i < arraySort.length; i++) {
+    const currentNumber = parseInt(arraySort[i].split('.')[2]);
+    const expectedNumber = i + 1;
+
+    // Если номер текущий не совпадает с ожидаемым, изменяем его
+    if (currentNumber !== expectedNumber) {
+      const parts = arraySort[i].split('.');
+      parts[2] = expectedNumber.toString();
+      arraySort[i] = parts.join('.');
+    }
+  }
+
+  // Возвращаем отсортированный и измененный массив
+  return arraySort;
+}
 
 // Форма под пунктом 5.1
 router.post('/createExcel51', async function (req, res) {
@@ -350,7 +391,7 @@ router.post('/createExcel51', async function (req, res) {
 
       console.log('Данные успешно вставлены после строки с значением 5.1.');
       res.send('Данные успешно вставлены');
-      const message = JSON.stringify(tableData);
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
       say('Данные были добавлены');
       say(message);
     } else {
@@ -671,7 +712,7 @@ router.post('/createExcel52', async function (req, res) {
       fs.renameSync(filePath, path.join(oldFolderPath, path.basename(filePath)));
       await workbook.xlsx.writeFile(newFilePath);
       say('Данные были добавлены');
-      const message = JSON.stringify(tableData);
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
       say(message);
       console.log('Данные успешно вставлены после строки с значением 5.2.');
       res.send('Данные успешно вставлены');
@@ -907,7 +948,7 @@ router.post('/createExcel54', async (req, res) => {
       await workbook.xlsx.writeFile(newFilePath);
       console.log('Данные успешно вставлены после строки с значением 5.4.');
       res.send('Данные успешно вставлены');
-      const message = JSON.stringify(tableData);
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
       say('Данные были добавлены');
       say(message);
     } else {
@@ -1252,7 +1293,7 @@ router.post('/createExcel64', async (req, res) => {
 
       console.log('Данные успешно вставлены после строки с значением 6.4.');
       res.send('Данные успешно вставлены');
-      const message = JSON.stringify(tableData);
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
       say('Данные были добавлены');
       say(message);
     } else {
@@ -1499,7 +1540,7 @@ router.post('/createExcel723', async (req, res) => {
 
       console.log('Данные успешно вставлены после строки с значением 7.2.3');
       res.send('Данные успешно вставлены');
-      const message = JSON.stringify(tableData);
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
       say('Данные были добавлены');
       say(message);
     } else {

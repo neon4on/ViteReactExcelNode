@@ -96,6 +96,7 @@ const Form64 = (props) => {
           </select>
         </label>
         <textarea
+          required
           id="textarea1"
           className="materialize-textarea"
           type="text"

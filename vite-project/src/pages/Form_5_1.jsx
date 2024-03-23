@@ -41,6 +41,7 @@ const Form51 = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     for (const key in tableData) {
       if (
         e.target.elements[key] &&
@@ -56,6 +57,7 @@ const Form51 = (props) => {
         return;
       }
     }
+
     try {
       console.log('Отправляемые данные:', tableData);
       const response = await axios.post(`${host}${port}/api/createExcel51`, tableData);
@@ -111,6 +113,7 @@ const Form51 = (props) => {
           управления"
         </h5>
         <textarea
+          required
           id="textarea1"
           className="materialize-textarea"
           type="text"

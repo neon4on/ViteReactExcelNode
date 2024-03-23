@@ -95,6 +95,7 @@ const Form723 = (props) => {
           проводимых для работников училищ (кадетских корпусов) по плану Минобороны России"
         </h5>
         <textarea
+          required
           id="textarea1"
           className="materialize-textarea"
           type="text"
