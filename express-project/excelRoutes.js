@@ -47,7 +47,7 @@ const isFileLocked = (filePath) => {
   }
 };
 
-// Проверка на валидность данных
+// Массив с валидными данными
 function validValue(data, ColimnA) {
   let regular = null;
   if (data == '5.1') regular = /^5\.1\.\d+$/;
@@ -55,26 +55,23 @@ function validValue(data, ColimnA) {
   const columnAValues = ColimnA;
   let arrayNotSort = [];
 
-  // Собираем все номера в массив
-  columnAValues.forEach((value) => {
-    if (typeof value === 'string' && value.match(regular)) {
-      arrayNotSort.push(value);
+  columnAValues.eachRow({ includeEmpty: false }, (row, index) => {
+    const rowData = row.getCell(1).value;
+    if (typeof rowData === 'string' && rowData.match(regular)) {
+      arrayNotSort.push(rowData);
     }
   });
 
-  // Сортируем массив
   const arraySort = arrayNotSort.sort((a, b) => {
     const numberA = parseInt(a.split('.')[2]);
     const numberB = parseInt(b.split('.')[2]);
     return numberA - numberB;
   });
 
-  // Перебираем массив и проверяем последовательность номеров
   for (let i = 0; i < arraySort.length; i++) {
     const currentNumber = parseInt(arraySort[i].split('.')[2]);
     const expectedNumber = i + 1;
 
-    // Если номер текущий не совпадает с ожидаемым, изменяем его
     if (currentNumber !== expectedNumber) {
       const parts = arraySort[i].split('.');
       parts[2] = expectedNumber.toString();
@@ -82,7 +79,7 @@ function validValue(data, ColimnA) {
     }
   }
 
-  // Возвращаем отсортированный и измененный массив
+  console.log(arraySort);
   return arraySort;
 }
 
@@ -378,6 +375,24 @@ router.post('/createExcel51', async function (req, res) {
         cellA.border = { left: { style: 'thick' } };
         cellE.alignment = { vertical: 'middle', horizontal: 'center' };
         cellF.alignment = { vertical: 'middle', horizontal: 'center' };
+      }
+
+      array = validValue('5.1', sheet);
+      let k = 0; // Каждая строка
+      let m = 0; // Элемент делящийся на 13
+      for (let i = rowIndex + 1; i < rowEndIndex + 13; i++) {
+        if (k % 13 == 0) {
+          const rowData = array[m];
+          console.log(rowData, i, k, m);
+          const parts = rowData.split('.');
+          const number = parseInt(parts[2]);
+          parts[2] = number.toString();
+          if (sheet.getCell(`A${i}`).value != array[m]) {
+            sheet.getCell(`A${i}`).value = parts.join('.');
+          }
+          m++;
+        }
+        k++;
       }
 
       const currentDate = new Date();
@@ -706,6 +721,24 @@ router.post('/createExcel52', async function (req, res) {
       const dateString = currentDate.toISOString().slice(0, 10);
       const timeString = currentDate.toTimeString().slice(0, 8).replace(/:/g, '-');
       const fileName = `table_${dateString}_${timeString}.xlsx`;
+
+      array = validValue('5.2', sheet);
+      let k = 0; // Каждая строка
+      let m = 0; // Элемент делящийся на 13
+      for (let i = rowIndex + 1; i < rowEndIndex + 13; i++) {
+        if (k % 13 == 0) {
+          const rowData = array[m];
+          console.log(rowData, i, k, m);
+          const parts = rowData.split('.');
+          const number = parseInt(parts[2]);
+          parts[2] = number.toString();
+          if (sheet.getCell(`A${i}`).value != array[m]) {
+            sheet.getCell(`A${i}`).value = parts.join('.');
+          }
+          m++;
+        }
+        k++;
+      }
 
       const newFilePath = path.join(newFolderPath, fileName);
 
