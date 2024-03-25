@@ -6,9 +6,9 @@ const path = require('path');
 const exceljs = require('exceljs');
 const axios = require('axios');
 const lockfile = require('lockfile');
-
+const urlencode = require('urlencode')
 // Константы
-const NUM_PARAM = '1986228881';
+const NUM_PARAM = '1787894486';
 const newFolderPath = 'new';
 const oldFolderPath = 'old';
 
@@ -75,6 +75,10 @@ router.post('/createExcel51', async function (req, res) {
       await axios.get(
         `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=файл%20открыт.%20данные%20не%20добавлены`,
       );
+      await axios.get(
+        `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=${urlencode(JSON.stringify(tableData))}`,
+      );
+      
       return;
     }
 
