@@ -5,12 +5,34 @@ const fs = require('fs');
 const path = require('path');
 const exceljs = require('exceljs');
 const axios = require('axios');
-const lockfile = require('lockfile');
-const urlencode = require('urlencode')
+const request = require('request');
+const urlencode = require('urlencode');
+
 // Константы
-const NUM_PARAM = '1787894486';
+const NUM_PARAM = '1986228881';
+const NUM_PARAM_Vlad = '304622290';
+const NUM_PARAM_Admin = '1787894486';
+const NUM_TG = [NUM_PARAM, NUM_PARAM_Vlad, NUM_PARAM_Admin];
 const newFolderPath = 'new';
 const oldFolderPath = 'old';
+
+//
+
+// Получение
+function say(msg) {
+  if (msg !== undefined) {
+    NUM_TG.forEach((number) => {
+      setTimeout(() => sendtg(number, msg), 1500);
+      console.log(number);
+    });
+  }
+}
+// Отправка сообщения в ТГ
+function sendtg(num, msg) {
+  const encodedMsg = urlencode.encode(msg);
+  const encodedNum = urlencode.encode(num);
+  request(`http://home.teyhd.ru:3334/?msg=${encodedMsg}&num=${encodedNum}`);
+}
 
 // Функция для проверки открытости файла
 const isFileLocked = (filePath) => {
@@ -25,22 +47,41 @@ const isFileLocked = (filePath) => {
   }
 };
 
-const checkLocksInFolder = () => {
-  const files = fs.readdirSync(newFolderPath);
-  files.forEach((file) => {
-    const filePath = path.join(newFolderPath, file);
-    try {
-      fs.renameSync(filePath, filePath);
-      console.log(`Файл ${filePath} не заблокирован.`);
-    } catch (error) {
-      if (error.code === 'EBUSY') {
-        console.log(`Файл ${filePath} заблокирован другим процессом.`);
-      } else {
-        console.error(`Ошибка при проверке файла ${filePath}:`, error);
-      }
+// Массив с валидными данными
+function validValue(data, ColimnA) {
+  let regular = null;
+  if (data == '5.1') regular = /^5\.1\.\d+$/;
+  if (data == '5.2') regular = /^5\.2\.\d+$/;
+  const columnAValues = ColimnA;
+  let arrayNotSort = [];
+
+  columnAValues.eachRow({ includeEmpty: false }, (row, index) => {
+    const rowData = row.getCell(1).value;
+    if (typeof rowData === 'string' && rowData.match(regular)) {
+      arrayNotSort.push(rowData);
     }
   });
-};
+
+  const arraySort = arrayNotSort.sort((a, b) => {
+    const numberA = parseInt(a.split('.')[2]);
+    const numberB = parseInt(b.split('.')[2]);
+    return numberA - numberB;
+  });
+
+  for (let i = 0; i < arraySort.length; i++) {
+    const currentNumber = parseInt(arraySort[i].split('.')[2]);
+    const expectedNumber = i + 1;
+
+    if (currentNumber !== expectedNumber) {
+      const parts = arraySort[i].split('.');
+      parts[2] = expectedNumber.toString();
+      arraySort[i] = parts.join('.');
+    }
+  }
+
+  console.log(arraySort);
+  return arraySort;
+}
 
 // Форма под пунктом 5.1
 router.post('/createExcel51', async function (req, res) {
@@ -72,13 +113,7 @@ router.post('/createExcel51', async function (req, res) {
 
     if (isFileLocked(filePath)) {
       console.log('Файл заблокирован другим процессом.');
-      await axios.get(
-        `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=файл%20открыт.%20данные%20не%20добавлены`,
-      );
-      await axios.get(
-        `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=${urlencode(JSON.stringify(tableData))}`,
-      );
-      
+      say('Файл открыт данные не добавлены');
       return;
     }
 
@@ -124,7 +159,7 @@ router.post('/createExcel51', async function (req, res) {
         }
         j++;
       }
-      console.log(tableData);
+
       const newRow1Values = [
         '5.1.1',
         tableData.winner,
@@ -342,6 +377,24 @@ router.post('/createExcel51', async function (req, res) {
         cellF.alignment = { vertical: 'middle', horizontal: 'center' };
       }
 
+      array = validValue('5.1', sheet);
+      let k = 0; // Каждая строка
+      let m = 0; // Элемент делящийся на 13
+      for (let i = rowIndex + 1; i < rowEndIndex + 13; i++) {
+        if (k % 13 == 0) {
+          const rowData = array[m];
+          console.log(rowData, i, k, m);
+          const parts = rowData.split('.');
+          const number = parseInt(parts[2]);
+          parts[2] = number.toString();
+          if (sheet.getCell(`A${i}`).value != array[m]) {
+            sheet.getCell(`A${i}`).value = parts.join('.');
+          }
+          m++;
+        }
+        k++;
+      }
+
       const currentDate = new Date();
       const dateString = currentDate.toISOString().slice(0, 10);
       const timeString = currentDate.toTimeString().slice(0, 8).replace(/:/g, '-');
@@ -351,16 +404,16 @@ router.post('/createExcel51', async function (req, res) {
       fs.renameSync(filePath, path.join(oldFolderPath, path.basename(filePath)));
       await workbook.xlsx.writeFile(newFilePath);
 
-      await axios.get(`http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=данные%20были%20добавлены`);
       console.log('Данные успешно вставлены после строки с значением 5.1.');
       res.send('Данные успешно вставлены');
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
+      say('Данные были добавлены');
+      say(message);
     } else {
       console.log('Строка с 5.1 не найдена.');
     }
   } catch (error) {
-    await axios.get(
-      `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=ошибка%20при%20открытии%20файла`,
-    );
+    say('ошибка при открытии файла');
     console.error('Ошибка при создании Excel файла:', error);
   }
 });
@@ -395,9 +448,7 @@ router.post('/createExcel52', async function (req, res) {
 
     if (isFileLocked(filePath)) {
       console.log('Файл заблокирован другим процессом.');
-      await axios.get(
-        `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=файл%20открыт.%20данные%20не%20добавлены`,
-      );
+      say('Файл открыт. Данные не добавлены');
       return;
     }
 
@@ -671,20 +722,38 @@ router.post('/createExcel52', async function (req, res) {
       const timeString = currentDate.toTimeString().slice(0, 8).replace(/:/g, '-');
       const fileName = `table_${dateString}_${timeString}.xlsx`;
 
+      array = validValue('5.2', sheet);
+      let k = 0; // Каждая строка
+      let m = 0; // Элемент делящийся на 13
+      for (let i = rowIndex + 1; i < rowEndIndex + 13; i++) {
+        if (k % 13 == 0) {
+          const rowData = array[m];
+          console.log(rowData, i, k, m);
+          const parts = rowData.split('.');
+          const number = parseInt(parts[2]);
+          parts[2] = number.toString();
+          if (sheet.getCell(`A${i}`).value != array[m]) {
+            sheet.getCell(`A${i}`).value = parts.join('.');
+          }
+          m++;
+        }
+        k++;
+      }
+
       const newFilePath = path.join(newFolderPath, fileName);
 
       fs.renameSync(filePath, path.join(oldFolderPath, path.basename(filePath)));
       await workbook.xlsx.writeFile(newFilePath);
-      await axios.get(`http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=данные%20были%20добавлены`);
+      say('Данные были добавлены');
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
+      say(message);
       console.log('Данные успешно вставлены после строки с значением 5.2.');
       res.send('Данные успешно вставлены');
     } else {
       console.log('Строка с 5.2 не найдена.');
     }
   } catch (error) {
-    await axios.get(
-      `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=ошибка%20при%20открытии%20файла`,
-    );
+    say('Ошибка при открытии файла');
     console.error('Ошибка при создании Excel файла:', error);
   }
 });
@@ -726,9 +795,7 @@ router.post('/createExcel54', async (req, res) => {
 
     if (isFileLocked(filePath)) {
       console.log('Файл заблокирован другим процессом.');
-      await axios.get(
-        `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=файл%20открыт.%20данные%20не%20добавлены`,
-      );
+      say('Файл открыт данные не добавлены');
       return;
     }
 
@@ -913,15 +980,15 @@ router.post('/createExcel54', async (req, res) => {
       fs.renameSync(filePath, path.join(oldFolderPath, path.basename(filePath)));
       await workbook.xlsx.writeFile(newFilePath);
       console.log('Данные успешно вставлены после строки с значением 5.4.');
-      await axios.get(`http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=данные%20были%20добавлены`);
       res.send('Данные успешно вставлены');
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
+      say('Данные были добавлены');
+      say(message);
     } else {
       console.log('Строка с 5.4 не найдена.');
     }
   } catch (error) {
-    await axios.get(
-      `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=ошибка%20при%20открытии%20файла`,
-    );
+    say('Ошибка при открытии файла');
     console.error('Ошибка при создании Excel файла:', error);
   }
 });
@@ -963,9 +1030,7 @@ router.post('/createExcel64', async (req, res) => {
 
     if (isFileLocked(filePath)) {
       console.log('Файл заблокирован другим процессом.');
-      await axios.get(
-        `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=файл%20открыт.%20данные%20не%20добавлены`,
-      );
+      say('Файл открыт данные не добавлены');
       return;
     }
 
@@ -1260,15 +1325,15 @@ router.post('/createExcel64', async (req, res) => {
       await workbook.xlsx.writeFile(newFilePath);
 
       console.log('Данные успешно вставлены после строки с значением 6.4.');
-      await axios.get(`http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=данные%20были%20добавлены`);
       res.send('Данные успешно вставлены');
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
+      say('Данные были добавлены');
+      say(message);
     } else {
       console.log('Строка с 6.4 не найдена.');
     }
   } catch (error) {
-    await axios.get(
-      `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=ошибка%20при%20открытии%20файла`,
-    );
+    say('Ошибка при открытии файла');
     console.error('Ошибка при создании Excel файла:', error);
   }
 });
@@ -1303,9 +1368,7 @@ router.post('/createExcel723', async (req, res) => {
 
     if (isFileLocked(filePath)) {
       console.log('Файл заблокирован другим процессом.');
-      await axios.get(
-        `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=файл%20открыт.%20данные%20не%20добавлены`,
-      );
+      say('Файл открыт данные не добавлены');
       return;
     }
 
@@ -1509,15 +1572,15 @@ router.post('/createExcel723', async (req, res) => {
       await workbook.xlsx.writeFile(newFilePath);
 
       console.log('Данные успешно вставлены после строки с значением 7.2.3');
-      await axios.get(`http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=данные%20были%20добавлены`);
       res.send('Данные успешно вставлены');
+      const message = JSON.stringify(tableData).replace(/[{}]/g, '').replace(/,/g, '\n');
+      say('Данные были добавлены');
+      say(message);
     } else {
       console.log('Строка с 7.2.3 не найдена.');
     }
   } catch (error) {
-    await axios.get(
-      `http://home.teyhd.ru:3334/?num=${NUM_PARAM}&msg=ошибка%20при%20открытии%20файла`,
-    );
+    say('Ошибка при открытии файла');
     console.error('Ошибка при создании Excel файла:', error);
   }
 });

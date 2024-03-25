@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useCookies } from 'react-cookie';
+import M from 'materialize-css';
 
 const now = new Date();
 const expires = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
 
-const port = 4001;
-const host = 'pan-a518-01';
+const Form51 = (props) => {
+  const { port, host } = props;
 
-const Form51 = () => {
   const [cookies, setCookie] = useCookies(['tableData']);
   const [tableData, setTableData] = useState(
     () =>
@@ -41,21 +41,63 @@ const Form51 = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    for (const key in tableData) {
+      if (
+        e.target.elements[key] &&
+        e.target.elements[key].type === 'text' &&
+        typeof tableData[key] === 'string' &&
+        tableData[key].trim() !== '' &&
+        !/^\d*$/.test(tableData[key])
+      ) {
+        M.toast({
+          html: 'Пожалуйста, вводите только числа',
+          classes: '#ef5350 red lighten-1 rounded',
+        });
+        return;
+      }
+    }
     try {
       console.log('Отправляемые данные:', tableData);
-      const response = await axios.post(`http://${host}:${port}/api/createExcel52`, tableData);
+      const response = await axios.post(`${host}${port}/api/createExcel52`, tableData);
       console.log('Ответ сервера:', response.data);
+      setTableData({
+        winner: '',
+        commandData1: '',
+        commandData2: '',
+        commandData3: '',
+        commandData11: '',
+        commandData21: '',
+        commandData31: '',
+        personalData1: '',
+        personalData2: '',
+        personalData3: '',
+        grandPrizeData: '',
+        individualAchievementData: '',
+        specialAwardsData: '',
+        lackOfCompetitiveComponentData: '',
+      });
+      M.toast({ html: 'Данные успешно отправлены', classes: '#26a69a teal lighten-1 rounded' });
     } catch (error) {
+      M.toast({ html: 'Данные не были отправлены', classes: '#ef5350 red lighten-1 rounded' });
       console.error('Ошибка при отправке данных:', error);
     }
   };
 
   useEffect(() => {
+    M.AutoInit();
     setTableData((prevTableData) => ({
       ...prevTableData,
       ...cookies.tableData,
     }));
   }, [cookies.tableData, setTableData]);
+
+  const handleKeyPress = (e) => {
+    const { name, value } = e.target;
+    if (!/^\d*$/.test(value)) {
+      M.toast({ html: 'Пожалуйста, вводите только числа' });
+      e.preventDefault();
+    }
+  };
 
   return (
     <div className="container">
@@ -66,6 +108,7 @@ const Form51 = () => {
           управления"
         </h5>
         <textarea
+          required
           id="textarea1"
           className="materialize-textarea"
           type="text"
@@ -89,6 +132,7 @@ const Form51 = () => {
                   name="commandData1"
                   value={tableData.commandData1 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -101,6 +145,7 @@ const Form51 = () => {
                   name="commandData2"
                   value={tableData.commandData2 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -113,6 +158,7 @@ const Form51 = () => {
                   name="commandData3"
                   value={tableData.commandData3 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -126,6 +172,7 @@ const Form51 = () => {
                   name="commandData11"
                   value={tableData.commandData11 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -138,6 +185,7 @@ const Form51 = () => {
                   name="commandData21"
                   value={tableData.commandData21 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -150,6 +198,7 @@ const Form51 = () => {
                   name="commandData31"
                   value={tableData.commandData31 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -163,6 +212,7 @@ const Form51 = () => {
                   name="personalData1"
                   value={tableData.personalData1 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -175,6 +225,7 @@ const Form51 = () => {
                   name="personalData2"
                   value={tableData.personalData2 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -187,6 +238,7 @@ const Form51 = () => {
                   name="personalData3"
                   value={tableData.personalData3 || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -199,6 +251,7 @@ const Form51 = () => {
                   name="grandPrizeData"
                   value={tableData.grandPrizeData || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -211,6 +264,7 @@ const Form51 = () => {
                   name="individualAchievementData"
                   value={tableData.individualAchievementData || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -223,6 +277,7 @@ const Form51 = () => {
                   name="specialAwardsData"
                   value={tableData.specialAwardsData || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
@@ -235,6 +290,7 @@ const Form51 = () => {
                   name="lackOfCompetitiveComponentData"
                   value={tableData.lackOfCompetitiveComponentData || ''}
                   onChange={handleChange}
+                  onKeyPress={handleKeyPress}
                 />
               </td>
             </tr>
