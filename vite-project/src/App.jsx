@@ -9,7 +9,9 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 const port = 4001;
-const host = 'pan-a518-01:';
+const host = 'http://pan-a518-01:';
+
+
 
 function App() {
   return (

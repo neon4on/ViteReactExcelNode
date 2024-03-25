@@ -60,6 +60,7 @@ const Form51 = (props) => {
 
     try {
       console.log('Отправляемые данные:', tableData);
+      console.log(`${host}${port}/api/createExcel51`);
       const response = await axios.post(`${host}${port}/api/createExcel51`, tableData);
       console.log('Ответ сервера:', response.data);
       setTableData({
