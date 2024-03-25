@@ -5,6 +5,9 @@ import { useCookies } from 'react-cookie';
 const now = new Date();
 const expires = new Date(now.getFullYear() + 10, now.getMonth(), now.getDate());
 
+const port = 4001;
+const host = 'pan-a518-01';
+
 const Form51 = () => {
   const [cookies, setCookie] = useCookies(['tableData']);
   const [tableData, setTableData] = useState(
@@ -40,7 +43,7 @@ const Form51 = () => {
     e.preventDefault();
     try {
       console.log('Отправляемые данные:', tableData);
-      const response = await axios.post('http://localhost:4000/api/createExcel52', tableData);
+      const response = await axios.post(`http://${host}:${port}/api/createExcel52`, tableData);
       console.log('Ответ сервера:', response.data);
     } catch (error) {
       console.error('Ошибка при отправке данных:', error);
