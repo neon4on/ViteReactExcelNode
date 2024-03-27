@@ -60,6 +60,7 @@ const Form64 = (props) => {
       setTableData({
         winner: '',
         commandData1: '',
+        select: '6.4.1',
       });
       M.toast({ html: 'Данные успешно отправлены', classes: '#26a69a teal lighten-1 rounded' });
     } catch (error) {

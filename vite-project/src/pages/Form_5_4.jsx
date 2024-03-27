@@ -64,6 +64,7 @@ const Form54 = (props) => {
         commandData1: '',
         commandData2: '',
         commandData3: '',
+        select: '5.4.1',
       });
       M.toast({ html: 'Данные успешно отправлены', classes: '#26a69a teal lighten-1 rounded' });
     } catch (error) {

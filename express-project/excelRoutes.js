@@ -12,7 +12,7 @@ const urlencode = require('urlencode');
 const NUM_PARAM = '1986228881';
 const NUM_PARAM_Vlad = '304622290';
 const NUM_PARAM_Admin = '1787894486';
-const NUM_TG = [NUM_PARAM, NUM_PARAM_Vlad, NUM_PARAM_Admin];
+const NUM_TG = [NUM_PARAM, NUM_PARAM_Vlad];
 const newFolderPath = 'new';
 const oldFolderPath = 'old';
 
